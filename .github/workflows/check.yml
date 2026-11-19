@@ -1,0 +1,35 @@
+name: Check MATH 285 9AM seat
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # every 5 minutes (GitHub may delay runs a few minutes)
+  workflow_dispatch: {}      # lets you run it by hand from the Actions tab
+
+permissions:
+  contents: write
+
+concurrency:
+  group: math285
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check seats
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python3 math285_watcher.py --once --state state.json --ntfy "$NTFY_TOPIC"
+      - name: Save alert state
+        run: |
+          if ! git diff --quiet state.json; then
+            git config user.name "math285-bot"
+            git config user.email "math285-bot@users.noreply.github.com"
+            git commit -am "Update seat state"
+            git push
+          fi
