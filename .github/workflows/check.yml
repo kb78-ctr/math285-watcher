@@ -3,12 +3,7 @@ name: Check MATH 285 9AM seat
 on:
   schedule:
     - cron: "*/5 * * * *"   # every 5 minutes (GitHub may delay runs a few minutes)
-  workflow_dispatch:         # lets you run it by hand from the Actions tab
-    inputs:
-      test:
-        description: "Send a test alert to your phone instead of checking"
-        type: boolean
-        default: false
+  workflow_dispatch: {}      # lets you run it by hand from the Actions tab
 
 permissions:
   contents: write
@@ -26,13 +21,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Send test alert
-        if: ${{ inputs.test }}
-        env:
-          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
-        run: python3 math285_watcher.py --test-notify --ntfy "$NTFY_TOPIC"
       - name: Check seats
-        if: ${{ !inputs.test }}
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: python3 math285_watcher.py --once --state state.json --ntfy "$NTFY_TOPIC"
